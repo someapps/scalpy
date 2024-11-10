@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import AsyncGenerator, List, Iterable
 
+from pendulum import date
+
 from .enums import DataType
 from .items import EventInfo, MarketRequest, Event, Signal, StreamItem, Order, Advise
 
@@ -100,4 +102,19 @@ class AdviseHandler(SignalHandler, ABC):
 
     @abstractmethod
     def on_advise(self, advise: Advise) -> Iterable[Order]:
+        ...
+
+
+class Connector(ABC):
+
+    @abstractmethod
+    def can_batch_download(self, data_type: DataType) -> bool:
+        ...
+
+    @abstractmethod
+    def get_day(self, info: EventInfo, day: date) -> Iterable[Event]:
+        ...
+
+    @abstractmethod
+    def get_days(self, info: EventInfo, day_from: date, day_to: date) -> Iterable[Event]:
         ...

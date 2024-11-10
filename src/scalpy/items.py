@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import List
 
-from .enums import DataType
+from .enums import DataType, MessageType
 
 
 @dataclass(frozen=True)
@@ -48,3 +49,16 @@ class MarketRequest:
 
     def __post_init__(self):
         assert self.preload or self.stream, 'Either preload or stream must be set'
+
+
+@dataclass(frozen=True)
+class PriceVolume:
+    price: float
+    volume: float
+
+
+@dataclass(frozen=True)
+class OrderbookEvent(StreamItem):
+    type: MessageType
+    asks: List[PriceVolume]
+    bids: List[PriceVolume]
