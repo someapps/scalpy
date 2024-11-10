@@ -1,0 +1,1 @@
+END_OF_STREAM = hash('END_OF_STREAM')
