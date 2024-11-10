@@ -22,11 +22,16 @@ class StreamItem:
 
 @dataclass(frozen=True)
 class Event(StreamItem):
-    ...
+    info: EventInfo
 
 
 @dataclass(frozen=True)
 class Signal(StreamItem):
+    ...
+
+
+@dataclass(frozen=True)
+class Advise:
     ...
 
 
