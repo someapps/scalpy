@@ -162,16 +162,18 @@ class BybitConnector(Connector):
             trade_id=trade_id,
         )
 
-    @staticmethod
-    def fetch_orderbook(line: str):
+    def fetch_orderbook(self, line: str) -> OrderbookEvent:
         def to_price_volume(list_):
-            return PriceVolume(float(list_[0]), float(list_[1]))
+            return PriceVolume(
+                price=float(list_[0]),
+                volume=float(list_[1])
+            )
 
         data = json.loads(line)
         return OrderbookEvent(
-            timestamp=data['cts'],
+            timestamp=float(data['cts']),
+            producer_id=id(self),
             type=MessageType[data['type'].upper()],
             asks=list(map(to_price_volume, data['data']['a'])),
             bids=list(map(to_price_volume, data['data']['b'])),
-            producer_id=0
         )
