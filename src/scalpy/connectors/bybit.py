@@ -5,10 +5,17 @@ from typing import List, Iterable, Sequence
 
 import requests
 from loguru import logger
+from pendulum import Interval
 from pybit.unified_trading import HTTP
 
-from scalpy.utils import get_day_start_end, download_file, get_lines_from_archive
-from .. import DataType, Connector, EventInfo, MessageType, PriceVolume, OrderbookEvent
+from scalpy import Connector
+from scalpy import DataType
+from scalpy import EventInfo
+from scalpy import MessageType
+from scalpy import OHLC
+from scalpy import OrderbookEvent
+from scalpy import PriceVolume
+from scalpy.utils import download_file, get_lines_from_archive
 
 
 class BybitConnector(Connector):
@@ -34,18 +41,19 @@ class BybitConnector(Connector):
 
         logger.info(f'Downloaded {info} for {day}')
 
-    def get_days(self, info: EventInfo, day_from: date, day_to: date) -> Iterable[Sequence]:
-        logger.info(f'Downloading {info} from {day_from} to {day_to}...')
+    def get_days(self, info: EventInfo, interval: Interval) -> Iterable[Sequence]:
+        logger.info(f'Downloading {info} for {interval}...')
 
         match info.type:
             case DataType.KLINE:
-                start, _ = get_day_start_end(day_from)
-                _, end = get_day_start_end(day_to)
-                yield from self.get_kline(info.symbol, info.period, start=start, end=end)
+                yield from self.get_kline(info.symbol, info.period, interval)
             case _:
                 raise NotImplementedError
 
-    def get_kline(self, symbol: str, period: int, start: int, end: int) -> Iterable[Sequence]:
+    def get_kline(self, symbol: str, period: int, interval: Interval) -> Iterable[Sequence]:
+        start = interval.start.int_timestamp * 1000
+        end = interval.end.int_timestamp * 1000 - 1
+
         while start <= end:
             candles = self._get_kline(symbol, period, start=start, end=end)
 
@@ -53,7 +61,7 @@ class BybitConnector(Connector):
                 return
 
             yield from candles
-            end = int(candles[-1][1]) - 1
+            end = int(candles[-1].start_timestamp) - 1
 
     @staticmethod
     def _convert_period(period: int) -> str:
@@ -69,26 +77,28 @@ class BybitConnector(Connector):
             case _:
                 raise ValueError(f'Unsupported period {period}')
 
-    def _get_kline(self, symbol: str, period: int, **kwargs) -> List[Sequence]:
+    def _get_kline(self, symbol: str, period: int, **kwargs) -> List[OHLC]:
         bybit_period = self._convert_period(period)
 
-        logger.info(f'Downloading {symbol} candles with period {bybit_period}, args={kwargs}...')
+        logger.info(f'Downloading {symbol} candlesticks with period '
+                    f'{bybit_period}, args={kwargs}...')
         result = self.http.get_kline(
             symbol=symbol,
             interval=bybit_period,
-            limit=1000,
+            limit=3,
             **kwargs
         )['result']['list']
         return [
-            (
-                int(item[0]) / 1000 + period * 60,  # close time
-                int(item[0]) / 1000,  # open time
-                float(item[1]),
-                float(item[2]),
-                float(item[3]),
-                float(item[4]),
-                float(item[5]) if item[5] else None,
-                float(item[6]) if item[6] else None,
+            OHLC(
+                timestamp=float(item[0]) + period * 60,  # close time
+                producer_id=id(self),
+                start_timestamp=float(item[0]),  # open time
+                open=float(item[1]),
+                high=float(item[2]),
+                low=float(item[3]),
+                close=float(item[4]),
+                volume=float(item[5]) if item[5] else None,
+                turnover=float(item[6]) if item[6] else None,
             )
             for item in result
         ]
@@ -143,7 +153,7 @@ class BybitConnector(Connector):
     def fetch_trade(line: str):
         ts, symbol, side, size, price, tick_dir, id_, *_ = line.split(',')
         return float(ts), side[0] == 'B', float(size), float(price), id_
-    
+
     @staticmethod
     def fetch_orderbook(line: str):
         def to_price_volume(list_):

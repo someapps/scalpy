@@ -52,6 +52,17 @@ class MarketRequest:
 
 
 @dataclass(frozen=True)
+class OHLC(StreamItem):
+    start_timestamp: float
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float = None
+    turnover: float = None
+
+
+@dataclass(frozen=True)
 class PriceVolume:
     price: float
     volume: float

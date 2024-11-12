@@ -8,6 +8,7 @@ from .items import (
     EventInfo,
     OrderbookEvent,
     PriceVolume,
+    OHLC
 )
 from .interfaces import (
     History,
