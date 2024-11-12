@@ -1,4 +1,13 @@
-from .enums import DataType, MessageType
+from .enums import (
+    DataType,
+    MessageType,
+)
+from .interfaces import (
+    History,
+    MarketIterator,
+    Handler,
+    Connector,
+)
 from .items import (
     StreamItem,
     Event,
@@ -8,11 +17,6 @@ from .items import (
     EventInfo,
     OrderbookEvent,
     PriceVolume,
-    OHLC
-)
-from .interfaces import (
-    History,
-    MarketIterator,
-    Handler,
-    Connector,
+    OHLC,
+    Trade,
 )

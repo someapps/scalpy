@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import AsyncGenerator, List, Iterable
 
-from pendulum import date, DateTime, Interval
+from pendulum import DateTime, Interval, Date
 
 from .enums import DataType
 from .items import EventInfo, MarketRequest, Event, Signal, StreamItem, Order, Advise
@@ -112,7 +112,7 @@ class Connector(ABC):
         ...
 
     @abstractmethod
-    def get_day(self, info: EventInfo, day: date) -> Iterable[Event]:
+    def get_day(self, info: EventInfo, day: Date) -> Iterable[Event]:
         ...
 
     @abstractmethod

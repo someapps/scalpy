@@ -1,11 +1,10 @@
 import json
-from datetime import date
 from pathlib import Path
-from typing import List, Iterable, Sequence
+from typing import List, Iterable
 
 import requests
 from loguru import logger
-from pendulum import Interval
+from pendulum import Interval, Date
 from pybit.unified_trading import HTTP
 
 from scalpy import Connector
@@ -15,6 +14,7 @@ from scalpy import MessageType
 from scalpy import OHLC
 from scalpy import OrderbookEvent
 from scalpy import PriceVolume
+from scalpy import Trade
 from scalpy.utils import download_file, get_lines_from_archive
 
 
@@ -30,7 +30,7 @@ class BybitConnector(Connector):
             case _:
                 return False
 
-    def get_day(self, info: EventInfo, day: date) -> Iterable[Sequence]:
+    def get_day(self, info: EventInfo, day: Date) -> Iterable[Trade | OrderbookEvent]:
         logger.info(f'Downloading {info} for {day}...')
 
         match info.type:
@@ -41,7 +41,7 @@ class BybitConnector(Connector):
 
         logger.info(f'Downloaded {info} for {day}')
 
-    def get_days(self, info: EventInfo, interval: Interval) -> Iterable[Sequence]:
+    def get_days(self, info: EventInfo, interval: Interval) -> Iterable[OHLC]:
         logger.info(f'Downloading {info} for {interval}...')
 
         match info.type:
@@ -50,7 +50,9 @@ class BybitConnector(Connector):
             case _:
                 raise NotImplementedError
 
-    def get_kline(self, symbol: str, period: int, interval: Interval) -> Iterable[Sequence]:
+        logger.info(f'Downloaded {info} for {interval}')
+
+    def get_kline(self, symbol: str, period: int, interval: Interval) -> Iterable[OHLC]:
         start = interval.start.int_timestamp * 1000
         end = interval.end.int_timestamp * 1000 - 1
 
@@ -103,7 +105,7 @@ class BybitConnector(Connector):
             for item in result
         ]
 
-    def download(self, info: EventInfo, day: date) -> Iterable[Sequence]:
+    def download(self, info: EventInfo, day: Date) -> Iterable[Trade | OrderbookEvent]:
         match info.type:
             case DataType.TRADE:
                 product_id = 'trade'
@@ -125,7 +127,7 @@ class BybitConnector(Connector):
         if not filepath.exists():
             download_file(file_info['url'], filename)
         else:
-            logger.info(f'File {filename} already exists, skip download...')
+            logger.info(f'File {filename} already exists, skip downloading...')
 
         lines = get_lines_from_archive(filename, skip_title)
 
@@ -133,7 +135,7 @@ class BybitConnector(Connector):
             yield fetch_func(line)
 
     @staticmethod
-    def get_download_info(symbol: str, product_id: str, day: date) -> dict:
+    def get_download_info(symbol: str, product_id: str, day: Date) -> dict:
         day_str = day.strftime("%Y-%m-%d")
         url = ('https://api2.bybit.com/quote/public/support/download/list-files'
                '?bizType=contract&interval=daily&periods='
@@ -149,10 +151,16 @@ class BybitConnector(Connector):
             logger.error(e)
             raise ValueError
 
-    @staticmethod
-    def fetch_trade(line: str):
-        ts, symbol, side, size, price, tick_dir, id_, *_ = line.split(',')
-        return float(ts), side[0] == 'B', float(size), float(price), id_
+    def fetch_trade(self, line: str) -> Trade:
+        ts, symbol, side, size, price, tick_dir, trade_id, *_ = line.split(',')
+        return Trade(
+            timestamp=float(ts) * 1000,
+            producer_id=id(self),
+            is_buy=side[0] == 'B',
+            size=float(size),
+            price=float(price),
+            trade_id=trade_id,
+        )
 
     @staticmethod
     def fetch_orderbook(line: str):

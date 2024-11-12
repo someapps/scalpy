@@ -63,6 +63,18 @@ class OHLC(StreamItem):
 
 
 @dataclass(frozen=True)
+class Trade(StreamItem):
+    is_buy: bool
+    size: float
+    price: float
+    trade_id: str
+
+    @property
+    def side(self):
+        return 'Buy' if self.is_buy else 'Sell'
+
+
+@dataclass(frozen=True)
 class PriceVolume:
     price: float
     volume: float
