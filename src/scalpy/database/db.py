@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Engine, MetaData
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncEngine, AsyncSession
 from sqlalchemy.orm import sessionmaker, Session
 
-from .. import config
+from scalpy import config
 from .orm import Base
 
 
