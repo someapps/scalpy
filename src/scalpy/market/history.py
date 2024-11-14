@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import Iterable, Sequence
 
-from .. import EventInfo, DataType
-from ..connectors.bybit import BybitConnector
-from ..database.db import Database
-from ..database.service import Service
-from ..utils import normalize_ts, get_days, to_timestamp
+from scalpy import EventInfo, DataType
+from scalpy.connectors.bybit import BybitConnector
+from scalpy.database.db import Database
+from scalpy.database.downloaded_service import DownloadedService
+from scalpy.database.service import Service
+from scalpy.utils import normalize_ts, get_days, to_timestamp
 
 
 class HistoryProvider:
@@ -13,6 +14,8 @@ class HistoryProvider:
     def __init__(self):
         database = Database()
         database.init()
+
+        self.downloaded_service = DownloadedService(database)
         self.service = Service(database)
         self.connector = BybitConnector()
 
@@ -26,10 +29,10 @@ class HistoryProvider:
 
         if not self.connector.can_batch_download(info.type):
             for day in days:
-                if not self.service.is_downloaded(info, day):
+                if not self.downloaded_service.is_downloaded(info, day):
                     data = list(self.connector.get_day(info, day))
                     self.service.save(info, data)
-                    self.service.set_downloaded(info, day, True)
+                    self.downloaded_service.set_downloaded(info, day, True)
             yield from self.service.get(info, start, end)
             return
 
@@ -38,7 +41,7 @@ class HistoryProvider:
         day_skipped = False
 
         for day in days:
-            if self.service.is_downloaded(info, day):
+            if self.downloaded_service.is_downloaded(info, day):
                 day_skipped = True
             else:
                 if day_skipped:
@@ -57,20 +60,6 @@ class HistoryProvider:
                 self.service.save(info, data)
 
                 for day in day_row:
-                    self.service.set_downloaded(info, day, True)
+                    self.downloaded_service.set_downloaded(info, day, True)
 
         yield from self.service.get(info, start, end)
-
-
-def main(info: EventInfo, start: datetime, end: datetime):
-    history = HistoryProvider()
-    events = history.get(info, to_timestamp(start), to_timestamp(end))
-    next(iter(events))
-
-
-if __name__ == '__main__':
-    main(
-        EventInfo('SOLUSDT', DataType.TRADE),
-        datetime.fromisoformat('2024-10-20T06:00:00'),
-        datetime.fromisoformat('2024-10-20T12:00:15'),
-    )

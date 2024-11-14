@@ -4,7 +4,15 @@ from typing import List, Sequence, Iterable
 from loguru import logger
 from sqlalchemy import select, insert, delete, Table
 
-from .. import EventInfo, DataType, KlineEvent, MessageType, OrderbookEvent, TradeEvent, PriceVolume
+from scalpy import (
+    EventInfo,
+    DataType,
+    # KlineEvent,
+    MessageType,
+    OrderbookEvent,
+    # TradeEvent,
+    PriceVolume
+)
 from .db import Database
 from .orm import Downloaded, get_kline_columns, get_trades_columns, get_orderbook_columns
 from ..utils import chunks
@@ -20,8 +28,6 @@ class Service:
         return self.database.get_metadata()
 
     def is_downloaded(self, info: EventInfo, day: date) -> bool:
-        # period = info.period if info.period is not None else 0
-
         stmt = (select(Downloaded)
                 .where(Downloaded.symbol == info.symbol)  # noqa
                 .where(Downloaded.type == info.type)

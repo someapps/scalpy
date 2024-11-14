@@ -1,10 +1,21 @@
 from typing import Iterable
 
-from sqlalchemy import Column, Integer, Float, String, Date, Boolean, Enum, Double, SmallInteger
+from sqlalchemy import (
+    Column,
+    Integer,
+    Float,
+    String,
+    Date,
+    Boolean,
+    Enum,
+    Double,
+    SmallInteger,
+    BigInteger
+)
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase
 
-from .. import DataType
+from scalpy import DataType
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -45,7 +56,7 @@ def get_orderbook_columns() -> Iterable[Column]:
 
 def get_trades_columns() -> Iterable[Column]:
     return (
-        Column('time', Double, nullable=False, index=True),
+        Column('time', BigInteger, nullable=False, index=True),
         Column('side', Boolean, nullable=False, comment='"is_buy" flag: 0 - sell, 1 - buy'),
         Column('size', Float, nullable=False),
         Column('price', Float, nullable=False),
