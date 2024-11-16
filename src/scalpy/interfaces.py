@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import AsyncGenerator, List, Iterable
+from typing import List, Iterable
 
-from pendulum import DateTime, Interval, Date
+from pendulum import Interval, Date
 
 from .enums import DataType
 from .items import EventInfo, MarketRequest, Event, Signal, StreamItem, Order, Advise
@@ -10,7 +10,7 @@ from .items import EventInfo, MarketRequest, Event, Signal, StreamItem, Order, A
 class History(ABC):
 
     @abstractmethod
-    def get(self, info: EventInfo, start: DateTime, end: DateTime) -> Iterable[Event]:
+    def get(self, info: EventInfo, interval: Interval) -> Iterable[Event]:
         ...
 
 

@@ -7,14 +7,17 @@ from loguru import logger
 from pendulum import Interval, Date
 from pybit.unified_trading import HTTP
 
-from scalpy import Connector
-from scalpy import DataType
-from scalpy import EventInfo
-from scalpy import MessageType
-from scalpy import OHLC
-from scalpy import OrderbookEvent
-from scalpy import PriceVolume
-from scalpy import Trade
+from scalpy import (
+    Connector,
+    DataType,
+    EventInfo,
+    MessageType,
+    OHLC,
+    Orderbook,
+    PriceVolume,
+    Trade,
+)
+from scalpy.constants import PERIOD_TO_MS
 from scalpy.utils import download_file, get_lines_from_archive
 
 
@@ -30,7 +33,7 @@ class BybitConnector(Connector):
             case _:
                 return False
 
-    def get_day(self, info: EventInfo, day: Date) -> Iterable[Trade | OrderbookEvent]:
+    def get_day(self, info: EventInfo, day: Date) -> Iterable[Trade | Orderbook]:
         logger.info(f'Downloading {info} for {day}...')
 
         match info.type:
@@ -87,12 +90,12 @@ class BybitConnector(Connector):
         result = self.http.get_kline(
             symbol=symbol,
             interval=bybit_period,
-            limit=3,
+            limit=1000,
             **kwargs
         )['result']['list']
         return [
             OHLC(
-                timestamp=float(item[0]) + period * 60,  # close time
+                timestamp=float(item[0]) + period * PERIOD_TO_MS,  # close time
                 producer_id=id(self),
                 start_timestamp=float(item[0]),  # open time
                 open=float(item[1]),
@@ -105,7 +108,7 @@ class BybitConnector(Connector):
             for item in result
         ]
 
-    def download(self, info: EventInfo, day: Date) -> Iterable[Trade | OrderbookEvent]:
+    def download(self, info: EventInfo, day: Date) -> Iterable[Trade | Orderbook]:
         match info.type:
             case DataType.TRADE:
                 product_id = 'trade'
@@ -162,7 +165,7 @@ class BybitConnector(Connector):
             trade_id=trade_id,
         )
 
-    def fetch_orderbook(self, line: str) -> OrderbookEvent:
+    def fetch_orderbook(self, line: str) -> Orderbook:
         def to_price_volume(list_):
             return PriceVolume(
                 price=float(list_[0]),
@@ -170,7 +173,7 @@ class BybitConnector(Connector):
             )
 
         data = json.loads(line)
-        return OrderbookEvent(
+        return Orderbook(
             timestamp=float(data['cts']),
             producer_id=id(self),
             type=MessageType[data['type'].upper()],

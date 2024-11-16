@@ -15,7 +15,7 @@ from .items import (
     Order,
     MarketRequest,
     EventInfo,
-    OrderbookEvent,
+    Orderbook,
     PriceVolume,
     OHLC,
     Trade,

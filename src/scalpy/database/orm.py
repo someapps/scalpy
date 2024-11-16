@@ -33,8 +33,8 @@ class Downloaded(Base):
 
 def get_kline_columns() -> Iterable[Column]:
     return (
-        Column('time', Integer, primary_key=True),
-        Column('start_time', Integer),
+        Column('time', Integer, primary_key=True, comment='close time in seconds'),
+        Column('start_time', Integer, comment='open time in seconds'),
         Column('open', Float, nullable=False),  # double ?
         Column('high', Float, nullable=False),  # double ?
         Column('low', Float, nullable=False),  # double ?
@@ -46,7 +46,7 @@ def get_kline_columns() -> Iterable[Column]:
 
 def get_orderbook_columns() -> Iterable[Column]:
     return (
-        Column('time', Double, primary_key=True),
+        Column('time', BigInteger, primary_key=True, comment='time in microseconds'),
         Column('price', Float, primary_key=True),
         Column('side', Boolean, primary_key=True, comment='"is_ask" flag: 0 - bid, 1 - ask'),
         Column('volume', Float, nullable=False),
@@ -56,7 +56,7 @@ def get_orderbook_columns() -> Iterable[Column]:
 
 def get_trades_columns() -> Iterable[Column]:
     return (
-        Column('time', BigInteger, nullable=False, index=True),
+        Column('time', BigInteger, nullable=False, index=True, comment='time in microseconds'),
         Column('side', Boolean, nullable=False, comment='"is_buy" flag: 0 - sell, 1 - buy'),
         Column('size', Float, nullable=False),
         Column('price', Float, nullable=False),

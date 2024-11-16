@@ -32,6 +32,9 @@ class TableManager:
 
         return metadata.tables[table_name]
 
+    def is_table_exists(self, info: EventInfo) -> bool:
+        return self.get_table_name(info) in self.database.get_metadata().tables
+
     @staticmethod
     def get_table_name(info: EventInfo, ext: str = None):
         symbol = info.symbol.lower().replace('.', '_')

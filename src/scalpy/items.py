@@ -32,7 +32,7 @@ class Signal(StreamItem):
 
 
 @dataclass(frozen=True)
-class Advise:
+class Advise(StreamItem):
     ...
 
 
@@ -81,7 +81,7 @@ class PriceVolume:
 
 
 @dataclass(frozen=True)
-class OrderbookEvent(StreamItem):
+class Orderbook(StreamItem):
     type: MessageType
     asks: List[PriceVolume]
     bids: List[PriceVolume]
