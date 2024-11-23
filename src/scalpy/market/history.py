@@ -24,7 +24,7 @@ class HistoryProvider(History):
 
         if not self.connector.can_batch_download(info.type):
             for day in interval:
-                if not self.downloaded_service.is_downloaded(info, day):
+                if not self.downloaded_service.is_downloaded(info, day.date()):
                     data = list(self.connector.get_day(info, day))
                     self.market_service.save(info, data)
                     self.downloaded_service.set_downloaded(info, day, True)
