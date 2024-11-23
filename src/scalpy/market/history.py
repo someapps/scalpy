@@ -19,7 +19,6 @@ class HistoryProvider(History):
         self.market_service = MarketService(database)
         self.connector = BybitConnector()
 
-    # TODO fix downloaded records
     def get(self, info: EventInfo, interval: Interval) -> Iterable[Event]:
         interval.in_days()
 
@@ -56,7 +55,9 @@ class HistoryProvider(History):
             else:
                 if day_skipped:
                     if day_row:
-                        interval = Interval(day_row[0], day_row[-1])
+                        start = day_row[0]
+                        end = day_row[-1].add(days=1).add(microseconds=-1)
+                        interval = Interval(start, end)
                         intervals_for_download.append(interval)
                         day_row = []
                         day_skipped = False
