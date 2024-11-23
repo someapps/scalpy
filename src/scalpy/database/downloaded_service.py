@@ -2,7 +2,7 @@ from datetime import date
 
 from sqlalchemy import select, insert, delete
 
-from scalpy import EventInfo
+from scalpy import EventInfo, DataType
 from .db import Database
 from .orm import Downloaded
 
@@ -26,7 +26,7 @@ class DownloadedService:
             return downloaded is not None
 
     def set_downloaded(self, info: EventInfo, day: date, value: bool):
-        period = info.period if info.period else 0
+        period = info.period if info.type == DataType.KLINE else 0
 
         if value:
             stmt = insert(Downloaded).values(
