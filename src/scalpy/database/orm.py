@@ -60,5 +60,5 @@ def get_trades_columns() -> Iterable[Column]:
         Column('side', Boolean, nullable=False, comment='"is_buy" flag: 0 - sell, 1 - buy'),
         Column('size', Float, nullable=False),
         Column('price', Float, nullable=False),
-        Column('id', String(36), primary_key=True),
+        Column('trade_id', String(36), primary_key=True),
     )
