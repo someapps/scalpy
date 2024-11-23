@@ -48,7 +48,7 @@ class MarketService:
                 'time': int(item.timestamp * mult),
                 'side': item.is_buy,
                 'price': item.price,
-                'volume': item.size,
+                'size': item.size,
                 'trade_id': item.trade_id,
             } for item in items
         ]
@@ -156,8 +156,8 @@ class MarketService:
 
     def _get_many(self, info: EventInfo, interval: Interval) -> List[tuple]:
         mult = self._get_time_multiplier(info.type)
-        start = int(interval.start.float_timestamp * mult)
-        end = int(interval.end.float_timestamp * mult)
+        start = int(interval.start.float_timestamp * 1000 * mult)
+        end = int(interval.end.float_timestamp * 1000 * mult)
         table = self.table_manager.get_table(info)
 
         stmt = (
