@@ -24,6 +24,7 @@ class StreamItem:
 @dataclass(frozen=True)
 class Event(StreamItem):
     info: EventInfo
+    data: StreamItem
 
 
 @dataclass(frozen=True)
