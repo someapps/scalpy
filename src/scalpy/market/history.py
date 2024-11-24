@@ -49,21 +49,26 @@ class HistoryProvider(History):
         day_row = []
         day_skipped = False
 
+        def add_day_row(days):
+            start = days[0].replace(hour=0, minute=0, second=0, microsecond=0)
+            end = (days[-1]
+                   .replace(hour=0, minute=0, second=0, microsecond=0)
+                   .add(days=1)
+                   .add(microseconds=-1))
+            sub_interval = Interval(start, end)
+            intervals_for_download.append(sub_interval)
+
         for day in interval:
-            if self.downloaded_service.is_downloaded(info, day):
+            if self.downloaded_service.is_downloaded(info, day.date()):
                 day_skipped = True
             else:
                 if day_skipped:
                     if day_row:
-                        start = day_row[0]
-                        end = day_row[-1].add(days=1).add(microseconds=-1)
-                        interval = Interval(start, end)
-                        intervals_for_download.append(interval)
+                        add_day_row(day_row)
                         day_row = []
                         day_skipped = False
                 day_row.append(day)
 
         if day_row:
-            interval = Interval(day_row[0], day_row[-1])
-            intervals_for_download.append(interval)
+            add_day_row(day_row)
         return intervals_for_download
